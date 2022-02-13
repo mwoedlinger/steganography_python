@@ -2,54 +2,40 @@ import cv2
 import numpy as np
 import argparse
 
-def bin_to_dec(bl: list, total_bits: int=8):
-    # e.g.: [[0,0,0,1,0,1,0], [0,0,0,1,0,1,1]] -> [10, 11]
-    powers_of_two = 2**np.linspace(total_bits-1, 0, total_bits).reshape((1, total_bits))
+def bin_to_dec(bl: list) -> list:
+    """List of bit list to list of integers 
+       e.g.: [[0,0,0,1,0,1,0], [0,0,0,1,0,1,1]] -> [10, 11]
+
+    Args:
+        bl (list): List of bit lists
+
+    Returns:
+        list: [description]
+    """
+    num_bits = len(bl[0])
+    powers_of_two = 2**np.linspace(num_bits-1, 0, num_bits).reshape((1, num_bits))
     powers_of_two = np.repeat(powers_of_two, len(bl), axis=0)
+
     return (powers_of_two*bl).sum(axis=1)
 
-def decode_img(img, bit_idx=0):
+def decode_img(img: np.array, bit_idx: int=0) -> list:
     
-    width, height, channels = img.shape
-    
+    # Extract relevant bits from image
     bit_window = np.ones(img.shape, dtype=np.uint8)<<bit_idx
     img_bitstream = (img & bit_window).flatten()>>bit_idx
     
-    message_len = bin_to_dec([img_bitstream[:24]], total_bits=24)[0]
+    # Extract message length and message bitstream
+    message_len = bin_to_dec([img_bitstream[:24]])[0]
+
+    # Check if something went wrong (for example because the encoded image got compressed lossy)
+    assert (message_len % 8 == 0), 'message length not divisible by 8.'
+
+    # Process bit list
     message_bitstream = img_bitstream[24:(24 + int(message_len))]
-    
-    assert (len(message_bitstream) % 8 == 0), 'message bitstream not divisible by 8.'
-    message_bytes = np.split(message_bitstream, len(message_bitstream)/8)
-    
+    message_bytes = np.split(message_bitstream, len(message_bitstream)/8)    
     message_ints = bin_to_dec(message_bytes).astype(np.uint8)
     
     return message_ints
-
-# def bits_to_ints(bl: list, total_bits: int=8):
-#     # e.g.: [[0,0,0,1,0,1,0], [0,0,0,1,0,1,1]] -> [10, 11]
-#     powers_of_two = 2**np.linspace(total_bits-1, 0, total_bits).reshape((1, total_bits))
-#     powers_of_two = np.repeat(powers_of_two, len(bl), axis=0)
-#     return (powers_of_two*bl).sum(axis=1)
-
-# def decode_img(img, bit_idx=0):
-    
-#     width, height, channels = img.shape
-    
-#     bit_window = np.ones(img.shape, dtype=np.uint8)<<bit_idx
-#     img_bitstream = (img & bit_window).flatten()>>bit_idx
-    
-#     message_len = bits_to_ints([img_bitstream[:24]], total_bits=24)[0]
-#     print(int(message_len))
-#     message_bitstream = img_bitstream[24:(24 + int(message_len))]
-    
-#     assert (len(message_bitstream) % 8 == 0), 'message bitstream not divisible by 8.'
-#     message_chars = np.split(message_bitstream, len(message_bitstream)/8)
-    
-#     message_ints = bits_to_ints(message_chars).astype(np.uint8)
-#     message_character_list = [chr(m) for m in message_ints]
-    
-#     return ''.join(message_character_list)
-
 
 
 if __name__ == '__main__':
