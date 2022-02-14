@@ -1,6 +1,10 @@
 # steganography_python
 Simple python project to hide any file in an image.
 
+From wikipedia: "Steganography is the practice of concealing a message within another message or a physical object. In computing/electronic contexts, a computer file, message, image, or video is concealed within another file, message, image, or video." ([Link](https://en.wikipedia.org/wiki/Steganography))
+
+This project allows to conceal an arbitrary file in an image by modifying one bit for every pixel. The resulting image contains is typically indistinguishable from the original image with the naked eye. For a given image the maximal message_file size is 8*3*width*height* - 24 ("-24" because we use 3 bytes, i.e. 24 bits, to save the length of the encoded file). This implementation only work with lossless compression (e.g. png), lossy compression might change the pixel values which leads to a corrupted message.
+
 ## Requirements
 
 The project requires an active python environmen with numpy and opencv-python:
